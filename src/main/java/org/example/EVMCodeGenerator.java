@@ -13,26 +13,17 @@ public class EVMCodeGenerator implements IRVisitor {
         return evmCode.toString();
     }
 
-    public void setPragmaVersion(String pragmaVersion) {
-        evmCode.append("Pragma Version: ").append(pragmaVersion).append("\n");
-    }
-
-    public void setContractName(String contractName) {
-        evmCode.append("Contract: ").append(contractName).append("\n");
-    }
-
     @Override
     public void visit(IRFunction function) {
-        // Function prologue
         evmCode.append("DUP1\n");
         evmCode.append("PUSH1 0x40\n");
         evmCode.append("MSTORE\n");
         evmCode.append("CALLVALUE\n");
         evmCode.append("DUP1\n");
         evmCode.append("ISZERO\n");
-        evmCode.append("PUSH2 0x00\n");
+        evmCode.append("PUSH2 0x0010\n");
         evmCode.append("JUMPI\n");
-        evmCode.append("PUSH1 0x0\n");
+        evmCode.append("PUSH1 0x00\n");
         evmCode.append("DUP1\n");
         evmCode.append("REVERT\n");
         evmCode.append("JUMPDEST\n");
@@ -50,13 +41,14 @@ public class EVMCodeGenerator implements IRVisitor {
         IRNode expression = expressionStatement.getExpression();
         if (expression instanceof IRAssignment) {
             IRAssignment assignment = (IRAssignment) expression;
-            evmCode.append("PUSH1 ").append(encodeLiteral(assignment.getValue())).append("\n");
+            generatePushInstruction(encodeLiteral(assignment.getValue()));
             evmCode.append("PUSH1 ").append(getStorageIndex(assignment.getVariable())).append("\n");
             evmCode.append("SSTORE\n");
         } else if (expression instanceof IRFunctionCall) {
             IRFunctionCall functionCall = (IRFunctionCall) expression;
+            // Generate code for function call arguments
             for (IRNode arg : functionCall.getArguments()) {
-                arg.accept(this);
+                visitFunctionArgument(arg);
             }
             evmCode.append("CALL\n");
         } else if (expression instanceof IRVariable) {
@@ -82,7 +74,7 @@ public class EVMCodeGenerator implements IRVisitor {
 
     @Override
     public void visit(IRAssignment assignment) {
-        evmCode.append("PUSH1 ").append(encodeLiteral(assignment.getValue())).append("\n");
+        generatePushInstruction(encodeLiteral(assignment.getValue()));
         evmCode.append("PUSH1 ").append(getStorageIndex(assignment.getVariable())).append("\n");
         evmCode.append("SSTORE\n");
     }
@@ -95,15 +87,38 @@ public class EVMCodeGenerator implements IRVisitor {
 
     @Override
     public void visit(IRLiteral literal) {
-        evmCode.append("PUSH1 ").append(encodeLiteral(literal.getValue())).append("\n");
+        generatePushInstruction(encodeLiteral(literal.getValue()));
     }
 
     @Override
     public void visit(IRFunctionCall functionCall) {
         for (IRNode arg : functionCall.getArguments()) {
-            arg.accept(this);
+            visitFunctionArgument(arg);
         }
         evmCode.append("CALL\n");
+    }
+
+    @Override
+    public void visit(IRSourceUnit sourceUnit) {
+        // Visit all top-level statements and functions
+        for (IRNode node : sourceUnit.getContracts()) {
+            node.accept(this);
+        }
+    }
+
+    @Override
+    public void visit(IRContract contract) {
+
+    }
+
+    @Override
+    public void visit(IRConstructor constructor) {
+
+    }
+
+    @Override
+    public void visit(IRParameter parameter) {
+
     }
 
     @Override
@@ -113,6 +128,30 @@ public class EVMCodeGenerator implements IRVisitor {
             returnStatement.getValue().accept(this);
         }
         evmCode.append("RETURN\n");
+    }
+
+    // New method to handle function call arguments
+    private void visitFunctionArgument(IRNode argument) {
+        if (argument instanceof IRLiteral) {
+            generatePushInstruction(encodeLiteral(((IRLiteral) argument).getValue()));
+        } else if (argument instanceof IRVariable) {
+            evmCode.append("PUSH1 ").append(getStorageIndex(((IRVariable) argument).getName())).append("\n");
+            evmCode.append("SLOAD\n");
+        } else {
+            argument.accept(this); // For other types of nodes, fallback to generic accept method
+        }
+    }
+
+    private void generatePushInstruction(String hexValue) {
+        int length = hexValue.length() / 2; // Each byte is represented by 2 hex characters
+        if (length <= 1) {
+            evmCode.append("PUSH1 0x").append(hexValue).append("\n");
+        } else if (length <= 32) {
+            evmCode.append("PUSH").append(length).append(" 0x").append(hexValue).append("\n");
+        } else {
+            // Trim or handle cases where the hex value is larger than 32 bytes
+            evmCode.append("PUSH32 0x").append(hexValue.substring(0, 64)).append("\n");
+        }
     }
 
     private String encodeLiteral(String value) {

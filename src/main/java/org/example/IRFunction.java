@@ -4,20 +4,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IRFunction extends IRNode {
-    private String name;
-    private List<IRStatement> statements;
+    private final String name;
+    private final List<IRParameter> parameters;
+    private final List<IRStatement> statements;
 
-    public IRFunction(String name) {
+    public IRFunction(String name, List<IRParameter> parameters, List<IRStatement> statements) {
         this.name = name;
-        this.statements = new ArrayList<>();
+        this.parameters = parameters;
+        this.statements = statements;
     }
 
     public String getName() {
         return name;
     }
 
+    public List<IRParameter> getParameters() {
+        return parameters;
+    }
+
     public List<IRStatement> getStatements() {
         return statements;
+    }
+
+    public void addParameter(IRParameter parameter) {
+        parameters.add(parameter);
     }
 
     public void addStatement(IRStatement statement) {

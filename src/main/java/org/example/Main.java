@@ -4,18 +4,17 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.example.gen.SolidityLexer;
 import org.example.gen.SolidityParser;
-
-import java.util.Arrays;
-
+import org.example.gen.SolidityParserBaseVisitor;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        var sourceFilePath = "/Users/Jakub/Desktop/Solidity_Kompilatory/src/main/resources/contracts/test.sol";
+        var sourceFilePath = "/Users/Jakub/Desktop/Solidity_Kompilatory/src/main/resources/contracts/example.sol";
         var input = CharStreams.fromFileName(sourceFilePath);
         var lexer = new SolidityLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new SolidityParser(tokens);
         var tree = parser.sourceUnit();
+
 
         var irGenerator = new SolidityIRGenerator();
         irGenerator.visit(tree);

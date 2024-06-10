@@ -10,10 +10,10 @@ import java.util.List;
 public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements SolidityParserVisitor<T> {
 
     private static StringBuilder visitorInfo = new StringBuilder();
-    private static List<String> bytecode = new ArrayList<>();
+    private static List<String> evm = new ArrayList<>();
 
-    public List<String> getBytecode() {
-        return bytecode;
+    public List<String> getEvmCode() {
+        return evm;
     }
 
     public static StringBuilder visitorInfo() {
@@ -22,16 +22,10 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
 
     @Override
     public T visitSourceUnit(SolidityParser.SourceUnitContext ctx) {
-        visitorInfo().append("sourceUnit: ").append(ctx.getText()).append("\n");
-
-        // Przykładowa operacja przetwarzania kodu źródłowego
-        bytecode.add("BEGIN SOURCE UNIT");
-
-        // Przetwórz dzieci węzła (inne deklaracje w pliku Solidity)
-        visitChildren(ctx);
-
-        bytecode.add("END SOURCE UNIT");
-        return null;
+        evm.add("PUSH1 0x80");
+        evm.add("PUSH1 0x40");
+        evm.add("MSTORE");
+        return visitChildren(ctx);
     }
 
     @Override
@@ -39,7 +33,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
         visitorInfo().append("pragmaDirective: ").append(ctx.getText()).append("\n");
 
         // Można tutaj dodać logikę do obsługi dyrektyw pragma, jeśli jest taka potrzeba
-        bytecode.add("PRAGMA " + ctx.getText());
+        evm.add("PRAGMA " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -55,7 +49,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
             visit(ctx.symbolAliases());
         }
 
-        bytecode.add("IMPORT " + ctx.getText());
+        evm.add("IMPORT " + ctx.getText());
 
         return null;
     }
@@ -65,7 +59,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
         visitorInfo().append("importAliases: ").append(ctx.getText()).append("\n");
 
 
-        bytecode.add("IMPORT ALIASES " + ctx.getText());
+        evm.add("IMPORT ALIASES " + ctx.getText());
 
         return null;
     }
@@ -74,7 +68,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
     public T visitPath(SolidityParser.PathContext ctx) {
         visitorInfo.append("path: ").append(ctx.getText()).append("\n");
 
-        bytecode.add("IMPORT PATH " + ctx.getText());
+        evm.add("IMPORT PATH " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -83,17 +77,17 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
     public T visitSymbolAliases(SolidityParser.SymbolAliasesContext ctx) {
         visitorInfo.append("symbolAliases: ").append(ctx.getText()).append("\n");
 
-        bytecode.add("SYMBOL ALIAS " + ctx.getText());
+        evm.add("SYMBOL ALIAS " + ctx.getText());
 
         return visitChildren(ctx);
     }
 
     @Override
     public T visitContractDefinition(SolidityParser.ContractDefinitionContext ctx) {
-        visitorInfo.append("contractDefinition: ").append(ctx.getText()).append("\n");
-
-        bytecode.add("CONTRACT DEFINITION " + ctx.getText());
-
+        visitorInfo.append("Visiting ContractDefinition\n");
+        evm.add("PUSH1 0x60");
+        evm.add("PUSH1 0x40");
+        evm.add("MSTORE");
         return visitChildren(ctx);
     }
 
@@ -101,7 +95,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
     public T visitInterfaceDefinition(SolidityParser.InterfaceDefinitionContext ctx) {
         visitorInfo.append("interfaceDefinition: ").append(ctx.getText()).append("\n");
 
-        bytecode.add("INTERFACE DEFINITION " + ctx.getText());
+        evm.add("INTERFACE DEFINITION " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -110,7 +104,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
     public T visitLibraryDefinition(SolidityParser.LibraryDefinitionContext ctx) {
         visitorInfo.append("libraryDefinition: ").append(ctx.getText()).append("\n");
 
-        bytecode.add("LIBRARY DEFINITION " + ctx.getText());
+        evm.add("LIBRARY DEFINITION " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -120,7 +114,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
         visitorInfo.append("inheritanceSpecifierList: ").append(ctx.getText()).append("\n");
 
         // Generate intermediate code for inheritance specifier list
-        bytecode.add("INHERITANCE SPECIFIER LIST " + ctx.getText());
+        evm.add("INHERITANCE SPECIFIER LIST " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -130,7 +124,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
         visitorInfo.append("inheritanceSpecifier: ").append(ctx.getText()).append("\n");
 
         // Generate intermediate code for a single inheritance specifier
-        bytecode.add("INHERITANCE SPECIFIER " + ctx.getText());
+        evm.add("INHERITANCE SPECIFIER " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -140,7 +134,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
         visitorInfo.append("contractBodyElement: ").append(ctx.getText()).append("\n");
 
         // Generate intermediate code for contract body element
-        bytecode.add("CONTRACT BODY ELEMENT " + ctx.getText());
+        evm.add("CONTRACT BODY ELEMENT " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -149,7 +143,7 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
     public T visitNamedArgument(SolidityParser.NamedArgumentContext ctx) {
         visitorInfo.append("namedArgument: ").append(ctx.getText()).append("\n");
 
-        bytecode.add("NAMED ARGUMENT " + ctx.getText());
+        evm.add("NAMED ARGUMENT " + ctx.getText());
 
         return visitChildren(ctx);
     }
@@ -157,84 +151,73 @@ public class SolidityParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
     @Override
     public T visitCallArgumentList(SolidityParser.CallArgumentListContext ctx) {
         visitorInfo.append("callArgumentList: ").append(ctx.getText()).append("\n");
-        bytecode.add("CALL ARGUMENT LIST " + ctx.getText());
+        evm.add("CALL ARGUMENT LIST " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitIdentifierPath(SolidityParser.IdentifierPathContext ctx) {
         visitorInfo.append("identifierPath: ").append(ctx.getText()).append("\n");
-        bytecode.add("IDENTIFIER PATH " + ctx.getText());
+        evm.add("IDENTIFIER PATH " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitModifierInvocation(SolidityParser.ModifierInvocationContext ctx) {
         visitorInfo.append("modifierInvocation: ").append(ctx.getText()).append("\n");
-        bytecode.add("MODIFIER INVOCATION " + ctx.getText());
+        evm.add("MODIFIER INVOCATION " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitVisibility(SolidityParser.VisibilityContext ctx) {
         visitorInfo.append("visibility: ").append(ctx.getText()).append("\n");
-        bytecode.add("VISIBILITY " + ctx.getText());
+        evm.add("VISIBILITY " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitParameterList(SolidityParser.ParameterListContext ctx) {
         visitorInfo.append("parameterList: ").append(ctx.getText()).append("\n");
-        bytecode.add("PARAMETER LIST " + ctx.getText());
+        evm.add("PARAMETER LIST " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitParameterDeclaration(SolidityParser.ParameterDeclarationContext ctx) {
         visitorInfo.append("parameterDeclaration: ").append(ctx.getText()).append("\n");
-        bytecode.add("PARAMETER DECLARATION " + ctx.getText());
+        evm.add("PARAMETER DECLARATION " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitConstructorDefinition(SolidityParser.ConstructorDefinitionContext ctx) {
         visitorInfo.append("constructorDefinition: ").append(ctx.getText()).append("\n");
-        bytecode.add("CONSTRUCTOR DEFINITION " + ctx.getText());
+        evm.add("CONSTRUCTOR DEFINITION " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitStateMutability(SolidityParser.StateMutabilityContext ctx) {
         visitorInfo.append("stateMutability: ").append(ctx.getText()).append("\n");
-        bytecode.add("STATE MUTABILITY " + ctx.getText());
+        evm.add("STATE MUTABILITY " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitOverrideSpecifier(SolidityParser.OverrideSpecifierContext ctx) {
         visitorInfo.append("overrideSpecifier: ").append(ctx.getText()).append("\n");
-        bytecode.add("OVERRIDE SPECIFIER " + ctx.getText());
+        evm.add("OVERRIDE SPECIFIER " + ctx.getText());
         return visitChildren(ctx);
     }
 
     @Override
     public T visitFunctionDefinition(SolidityParser.FunctionDefinitionContext ctx) {
-        visitorInfo.append("functionDefinition: ").append(ctx.identifier().getText()).append("\n");
-        bytecode.add("BEGIN FUNCTION " + ctx.identifier().getText());
-
-        if (ctx.parameterList() != null) {
-            for (int i = 0 ; i < ctx.parameterList().toArray().length; i++)
-            {
-                visit(ctx.parameterList(i));
-            }
-        }
-
-        if (ctx.block() != null) {
-            visit(ctx.block());
-        }
-
-        bytecode.add("END FUNCTION");
-        return null;
+        visitorInfo.append("Visiting FunctionDefinition\n");
+        evm.add("PUSH1 0x80");  // Placeholder opCode
+        evm.add("PUSH1 0x40");  // Placeholder opCode
+        evm.add("MSTORE");      // Placeholder opCode
+        return visitChildren(ctx);
     }
 
     @Override

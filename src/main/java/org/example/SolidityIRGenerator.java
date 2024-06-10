@@ -50,7 +50,7 @@ public class SolidityIRGenerator extends SolidityParserBaseVisitor<IRNode> {
     @Override
     public IRNode visitConstructorDefinition(SolidityParser.ConstructorDefinitionContext ctx) {
         var functionName = "constructor";
-        var irFunction = new IRFunction(functionName);
+        var irFunction = new IRFunction(functionName, new ArrayList<>(), new ArrayList<>());
         functions.add(irFunction);
 
         for (var stmtCtx : ctx.block().statement()) {
@@ -62,6 +62,7 @@ public class SolidityIRGenerator extends SolidityParserBaseVisitor<IRNode> {
 
         return irFunction;
     }
+
 
     @Override
     public IRNode visitContractDefinition(SolidityParser.ContractDefinitionContext ctx) {
@@ -117,18 +118,31 @@ public class SolidityIRGenerator extends SolidityParserBaseVisitor<IRNode> {
     @Override
     public IRNode visitFunctionDefinition(SolidityParser.FunctionDefinitionContext ctx) {
         String functionName = ctx.identifier().getText();
-        IRFunction irFunction = new IRFunction(functionName);
-        functions.add(irFunction);
 
-        for (SolidityParser.StatementContext stmtCtx : ctx.block().statement()) {
-            IRStatement irStmt = (IRStatement) visit(stmtCtx);
-            if (irStmt != null) {
-                irFunction.addStatement(irStmt);
+        List<IRParameter> parameters = new ArrayList<>();
+        if (ctx.parameterList() != null) {
+            for (SolidityParser.ParameterListContext paramCtx : ctx.parameterList()) {
+                String type = paramCtx.parameterDeclaration.type.getText();
+                String name = paramCtx.parameterDeclaration.identifier() != null ? paramCtx.parameterDeclaration.identifier().getText() : "";
+                parameters.add(new IRParameter(type, name));
             }
         }
 
+        IRFunction irFunction = new IRFunction(functionName, parameters, new ArrayList<>());
+
+        if (ctx.block() != null) {
+            for (SolidityParser.StatementContext stmtCtx : ctx.block().statement()) {
+                IRStatement irStmt = (IRStatement) visit(stmtCtx);
+                if (irStmt != null) {
+                    irFunction.addStatement(irStmt);
+                }
+            }
+        }
+
+        functions.add(irFunction);
         return irFunction;
     }
+
 
     @Override
     public IRNode visitExpressionStatement(SolidityParser.ExpressionStatementContext ctx) {

@@ -1,5 +1,7 @@
 package org.example;
 
+import java.util.List;
+
 public class IRCodeGenerator implements IRVisitor {
     private final StringBuilder bytecode = new StringBuilder();
 
@@ -17,7 +19,16 @@ public class IRCodeGenerator implements IRVisitor {
 
     @Override
     public void visit(IRFunction function) {
-        bytecode.append("Function: ").append(function.getName()).append("\n");
+        bytecode.append("Function: ").append(function.getName()).append("(");
+        List<IRParameter> parameters = function.getParameters();
+        for (int i = 0; i < parameters.size(); i++) {
+            IRParameter parameter = parameters.get(i);
+            bytecode.append(parameter.toString());
+            if (i < parameters.size() - 1) {
+                bytecode.append(", ");
+            }
+        }
+        bytecode.append(")\n");
         for (IRStatement statement : function.getStatements()) {
             if (statement != null) {
                 statement.accept(this);
@@ -69,5 +80,40 @@ public class IRCodeGenerator implements IRVisitor {
             bytecode.append(arg.toString()).append(", ");
         }
         bytecode.append("\n");
+    }
+
+    @Override
+    public void visit(IRSourceUnit sourceUnit) {
+        setPragmaVersion(sourceUnit.getPragmaVersion());
+        for (IRContract contract : sourceUnit.getContracts()) {
+            contract.accept(this);
+        }
+    }
+
+    @Override
+    public void visit(IRContract contract) {
+        bytecode.append("Contract: ").append(contract.getName()).append("\n");
+        for (IRVariableDeclaration declaration : contract.getVariableDeclarations()) {
+            declaration.accept(this);
+        }
+        for (IRFunction function : contract.getFunctions()) {
+            function.accept(this);
+        }
+    }
+
+    @Override
+    public void visit(IRConstructor constructor) {
+        bytecode.append("Constructor:\n");
+        for (IRStatement statement : constructor.getStatements()) {
+            statement.accept(this);
+        }
+        for (IRParameter parameter : constructor.getParameters()) {
+            parameter.accept(this);
+        }
+    }
+
+    @Override
+    public void visit(IRParameter parameter) {
+        bytecode.append(parameter.getType()).append(" ").append(parameter.getName());
     }
 }
