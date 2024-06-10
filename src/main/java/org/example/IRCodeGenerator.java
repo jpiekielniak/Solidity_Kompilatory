@@ -116,4 +116,23 @@ public class IRCodeGenerator implements IRVisitor {
     public void visit(IRParameter parameter) {
         bytecode.append(parameter.getType()).append(" ").append(parameter.getName());
     }
+
+    @Override
+    public void visit(IRFunctionDefinition functionDefinition) {
+        bytecode.append("Function: ").append(functionDefinition.getName()).append(" (");
+
+        for (IRParameter parameter : functionDefinition.getParameters()) {
+            parameter.accept(this);
+            bytecode.append(", ");
+        }
+
+        if (!functionDefinition.getParameters().isEmpty()) {
+            bytecode.setLength(bytecode.length() - 2);
+        }
+        bytecode.append(")\n");
+
+        for (IRStatement statement : functionDefinition.getBody()) {
+            statement.accept(this);
+        }
+    }
 }

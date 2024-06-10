@@ -16,4 +16,3 @@ public class IRLiteral extends IRNode {
         visitor.visit(this);
     }
 }
-

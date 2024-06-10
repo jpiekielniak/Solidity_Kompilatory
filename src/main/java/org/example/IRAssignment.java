@@ -2,9 +2,9 @@ package org.example;
 
 public class IRAssignment extends IRStatement {
     private String variable;
-    private String value;
+    private IRNode value;
 
-    public IRAssignment(String variable, String value) {
+    public IRAssignment(String variable, IRNode value) {
         this.variable = variable;
         this.value = value;
     }
@@ -13,13 +13,13 @@ public class IRAssignment extends IRStatement {
         return variable;
     }
 
-    public String getValue() {
+    public IRNode getValue() {
         return value;
     }
 
     @Override
     public String toString() {
-        return variable + " = " + value;
+        return variable + " = " + value.toString();
     }
 
     @Override

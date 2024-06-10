@@ -1,8 +1,8 @@
 package org.example;
 
 public class IRParameter extends IRNode {
-    private final String type;
-    private final String name;
+    private String type;
+    private String name;
 
     public IRParameter(String type, String name) {
         this.type = type;
@@ -20,10 +20,5 @@ public class IRParameter extends IRNode {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    public String toString() {
-        return type + " " + name;
     }
 }

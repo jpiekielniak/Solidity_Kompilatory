@@ -5,11 +5,13 @@ import java.util.List;
 public class IRContract extends IRNode {
     private final String name;
     private final List<IRVariableDeclaration> variableDeclarations;
+    private final IRConstructor constructor;
     private final List<IRFunction> functions;
 
-    public IRContract(String name, List<IRVariableDeclaration> variableDeclarations, List<IRFunction> functions) {
+    public IRContract(String name, List<IRVariableDeclaration> variableDeclarations, IRConstructor constructor, List<IRFunction> functions) {
         this.name = name;
         this.variableDeclarations = variableDeclarations;
+        this.constructor = constructor;
         this.functions = functions;
     }
 
@@ -19,6 +21,10 @@ public class IRContract extends IRNode {
 
     public List<IRVariableDeclaration> getVariableDeclarations() {
         return variableDeclarations;
+    }
+
+    public IRConstructor getConstructor() {
+        return constructor;
     }
 
     public List<IRFunction> getFunctions() {

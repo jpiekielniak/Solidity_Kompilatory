@@ -177,9 +177,9 @@ public class SolidityIRGenerator extends SolidityParserBaseVisitor<IRNode> {
 
     @Override
     public IRNode visitAssignment(SolidityParser.AssignmentContext ctx) {
-        String variable = ctx.expression().getFirst().getText();
-        String value = ctx.expression().getLast().getText();
-        return new IRAssignment(variable, value);
+        IRNode variable = (IRNode) visit(ctx.expression(0));
+        IRNode value = (IRNode) visit(ctx.expression(1));
+        return new IRAssignment(variable.toString(), value);
     }
 
     @Override
