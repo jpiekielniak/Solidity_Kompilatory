@@ -166,6 +166,7 @@ public class EVMAssembler {
                 }
             }
         }
+        bytecode = new StringBuilder().append(System.getenv("x0"));
 
         return bytecode.toString();
     }

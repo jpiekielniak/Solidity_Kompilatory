@@ -11,6 +11,7 @@ public class EVMCodeGenerator implements IRVisitor {
     private int storageIndexCounter = 0;
 
     public String getEVMCode() {
+        evmCode.append(evmCode);
         return evmCode.toString();
     }
 
@@ -23,7 +24,6 @@ public class EVMCodeGenerator implements IRVisitor {
 
     @Override
     public void visit(IRContract contract) {
-        // Initialize the contract
         evmCode.append("PUSH1 0x60\n");
         evmCode.append("PUSH1 0x40\n");
         evmCode.append("MSTORE\n");
@@ -68,7 +68,6 @@ public class EVMCodeGenerator implements IRVisitor {
 
     @Override
     public void visit(IRParameter parameter) {
-        String paramName = parameter.getName();
         Object paramValue = parameter;
 
         if (paramValue instanceof Integer) {
@@ -76,6 +75,7 @@ public class EVMCodeGenerator implements IRVisitor {
         } else {
             evmCode.append("PUSH1 0x").append(paramValue).append("\n");
         }
+
     }
 
     @Override
