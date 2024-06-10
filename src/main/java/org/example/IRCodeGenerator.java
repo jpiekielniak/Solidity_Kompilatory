@@ -118,6 +118,11 @@ public class IRCodeGenerator implements IRVisitor {
     }
 
     @Override
+    public void visit(IRInstruction instruction) {
+        bytecode.append("  Instruction: ").append(instruction.getType()).append(" ").append(instruction.getOperands()).append("\n");
+    }
+
+    @Override
     public void visit(IRFunctionDefinition functionDefinition) {
         bytecode.append("Function: ").append(functionDefinition.getName()).append(" (");
 

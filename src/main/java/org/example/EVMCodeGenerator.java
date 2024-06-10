@@ -1,6 +1,7 @@
 package org.example;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EVMCodeGenerator implements IRVisitor {
@@ -27,17 +28,14 @@ public class EVMCodeGenerator implements IRVisitor {
         evmCode.append("PUSH1 0x40\n");
         evmCode.append("MSTORE\n");
 
-        // Handle variable declarations
         for (IRVariableDeclaration declaration : contract.getVariableDeclarations()) {
             declaration.accept(this);
         }
 
-        // Handle constructor
         if (contract.getConstructor() != null) {
             contract.getConstructor().accept(this);
         }
 
-        // Handle functions
         for (IRFunction function : contract.getFunctions()) {
             function.accept(this);
         }
@@ -45,7 +43,6 @@ public class EVMCodeGenerator implements IRVisitor {
 
     @Override
     public void visit(IRConstructor constructor) {
-        // Initialize the constructor
         evmCode.append("CALLVALUE\n");
         evmCode.append("DUP1\n");
         evmCode.append("ISZERO\n");
@@ -65,19 +62,54 @@ public class EVMCodeGenerator implements IRVisitor {
             statement.accept(this);
         }
 
-        // Use PUSH2 0x0187 instead of PUSH1 0x00
         evmCode.append("PUSH2 0x0187\n");
         evmCode.append("SSTORE\n");
     }
 
     @Override
     public void visit(IRParameter parameter) {
+        String paramName = parameter.getName();
+        Object paramValue = parameter;
 
+        if (paramValue instanceof Integer) {
+            evmCode.append("PUSH ").append(paramValue).append("\n");
+        } else {
+            evmCode.append("PUSH1 0x").append(paramValue).append("\n");
+        }
     }
 
     @Override
     public void visit(IRFunctionDefinition functionDefinition) {
+        String functionName = functionDefinition.getName();
+        List<IRStatement> body = functionDefinition.getBody();
 
+        evmCode.append(functionName).append(":\n");
+
+        for (IRStatement statement : body) {
+            statement.accept(this);
+        }
+
+        evmCode.append("STOP\n");
+    }
+
+    @Override
+    public void visit(IRInstruction instruction) {
+        String type = instruction.getType();
+        List<Object> operands = instruction.getOperands();
+
+        switch (type) {
+            case "SLOAD":
+                evmCode.append("SLOAD ").append(operands.get(0)).append("\n");
+                break;
+            case "SSTORE":
+                evmCode.append("SSTORE ").append(operands.get(0)).append(" ").append(operands.get(1)).append("\n");
+                break;
+            case "PUSH":
+                evmCode.append("PUSH ").append(operands.get(0)).append("\n");
+                break;
+            default:
+                break;
+        }
     }
 
     @Override

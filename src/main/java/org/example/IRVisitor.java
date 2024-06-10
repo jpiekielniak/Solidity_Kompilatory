@@ -14,4 +14,5 @@ public interface IRVisitor {
     void visit(IRReturn returnStatement);
     void visit(IRFunctionCall functionCall);
     void visit(IRParameter parameter);
+    void visit(IRInstruction instruction);
 }
